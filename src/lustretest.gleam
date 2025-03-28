@@ -24,17 +24,17 @@ pub type Model {
   Model(user_name: String, fetching: Bool, repos: List(Repo), debug: Bool)
 }
 
+pub type Msg {
+  UserEnteredUsernameInput(String)
+  UserSubmittedRequest
+  ApiReturnedRepos(Result(List(Repo), lustre_http.HttpError))
+}
+
 fn init(_) -> #(Model, effect.Effect(Msg)) {
   #(
     Model(user_name: "dhth", fetching: True, repos: [], debug: False),
     get_repos("dhth"),
   )
-}
-
-pub type Msg {
-  UserEnteredUsernameInput(String)
-  UserSubmittedRequest
-  ApiReturnedRepos(Result(List(Repo), lustre_http.HttpError))
 }
 
 fn get_repos(user_name: String) -> effect.Effect(Msg) {
@@ -84,11 +84,23 @@ pub fn view(model: Model) -> element.Element(Msg) {
     True -> html.div([], [element.text(string.inspect(model))])
   }
 
+  let heading_text = case model.fetching {
+    False -> "lustre test"
+    True -> "lustre test ..."
+  }
   let heading =
     html.div([], [
-      html.h1([attribute.class("text-4xl mb-2 text-[#fe8019]")], [
-        element.text("lustre test"),
-      ]),
+      html.a(
+        [
+          attribute.href("https://github.com/dhth/lustre-test"),
+          attribute.target("_blank"),
+        ],
+        [
+          html.h1([attribute.class("text-4xl mb-2 text-[#fe8019]")], [
+            element.text(heading_text),
+          ]),
+        ],
+      ),
     ])
 
   let search_form =
