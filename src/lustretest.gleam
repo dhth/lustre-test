@@ -15,7 +15,9 @@ pub type Repo {
   Repo(
     id: Int,
     name: String,
+    url: String,
     description: option.Option(String),
+    language: option.Option(String),
     stargazers_count: Int,
   )
 }
@@ -41,18 +43,29 @@ fn get_repos(user_name: String) -> effect.Effect(Msg) {
   let decoder = {
     use id <- decode.field("id", decode.int)
     use name <- decode.field("name", decode.string)
+    use url <- decode.field("url", decode.string)
     use description <- decode.field(
       "description",
       decode.optional(decode.string),
     )
     use stargazers_count <- decode.field("stargazers_count", decode.int)
-    decode.success(Repo(id:, name:, description:, stargazers_count:))
+    use language <- decode.field("language", decode.optional(decode.string))
+    decode.success(Repo(
+      id:,
+      name:,
+      url:,
+      description:,
+      language:,
+      stargazers_count:,
+    ))
   }
 
   let expect = lustre_http.expect_json(decode.list(decoder), ApiReturnedRepos)
 
   lustre_http.get(
-    "https://api.github.com/users/" <> user_name <> "/repos",
+    "https://api.github.com/users/"
+      <> user_name
+      <> "/repos?sort=updated&direction=desc&per_page=50",
     expect,
   )
 }
@@ -133,15 +146,21 @@ pub fn view(model: Model) -> element.Element(Msg) {
         html.table(
           [attribute.class("table-auto px-4 py-2"), attribute.id("repos-table")],
           [
-            html.tr([attribute.class("text-semibold")], [
+            html.tr([attribute.class("text-large")], [
               html.td([], [element.text("Name")]),
               html.td([], [element.text("Description")]),
+              html.td([], [element.text("Language")]),
               html.td([], [element.text("Stargazers")]),
             ]),
             ..list.map(model.repos, fn(repo) {
               html.tr([attribute.class("text-base")], [
-                html.td([], [element.text(repo.name)]),
+                html.a([attribute.href(repo.url)], [
+                  html.td([attribute.class("text-[#83a598] font-semibold")], [
+                    element.text(repo.name),
+                  ]),
+                ]),
                 html.td([], [element.text(option.unwrap(repo.description, ""))]),
+                html.td([], [element.text(option.unwrap(repo.language, ""))]),
                 html.td([], [element.text(int.to_string(repo.stargazers_count))]),
               ])
             })

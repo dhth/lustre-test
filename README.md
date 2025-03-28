@@ -1,3 +1,4 @@
 # Lustre test
 
-Trying out [lustre](https://hexdocs.pm/lustre/).
+Playing around with [gleam](https://github.com/gleam-lang/gleam) and
+[lustre](https://hexdocs.pm/lustre/).
