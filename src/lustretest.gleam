@@ -42,7 +42,7 @@ fn init(_) -> #(Model, effect.Effect(Msg)) {
 fn get_repos(user_name: String) -> effect.Effect(Msg) {
   let decoder = {
     use id <- decode.field("id", decode.int)
-    use name <- decode.field("name", decode.string)
+    use name <- decode.field("full_name", decode.string)
     use url <- decode.field("html_url", decode.string)
     use description <- decode.field(
       "description",
@@ -65,7 +65,7 @@ fn get_repos(user_name: String) -> effect.Effect(Msg) {
   lustre_http.get(
     "https://api.github.com/users/"
       <> user_name
-      <> "/repos?sort=updated&direction=desc&per_page=50",
+      <> "/repos?sort=updated&direction=desc&per_page=50&type=all",
     expect,
   )
 }
@@ -144,20 +144,30 @@ pub fn view(model: Model) -> element.Element(Msg) {
     [_, ..] ->
       html.div([attribute.class("mt-8")], [
         html.table(
-          [attribute.class("table-auto px-4 py-2"), attribute.id("repos-table")],
           [
-            html.tr([attribute.class("text-large")], [
-              html.td([], [element.text("Name")]),
-              html.td([], [element.text("Description")]),
-              html.td([], [element.text("Language")]),
-              html.td([], [element.text("Stargazers")]),
+            attribute.class(
+              "table-auto border-2 border-[#3c3836] w-full text-left",
+            ),
+            attribute.id("repos-table"),
+          ],
+          [
+            html.tr([attribute.class("text-large border-2 border-[#3c3836]")], [
+              html.th([attribute.class("px-4 py-4")], [element.text("Name")]),
+              html.th([attribute.class("pr-4 py-4")], [
+                element.text("Description"),
+              ]),
+              html.th([attribute.class("pr-4 py-4")], [element.text("Language")]),
+              html.th([attribute.class("pr-4 py-4")], [
+                element.text("Stargazers"),
+              ]),
             ]),
             ..list.map(model.repos, fn(repo) {
-              html.tr([attribute.class("text-base")], [
+              html.tr([attribute.class("text-base border-2 border-[#3c3836]")], [
                 html.a([attribute.href(repo.url), attribute.target("_blank")], [
-                  html.td([attribute.class("text-[#83a598] font-semibold")], [
-                    element.text(repo.name),
-                  ]),
+                  html.td(
+                    [attribute.class("text-[#83a598] font-semibold px-4 py-2")],
+                    [element.text(repo.name)],
+                  ),
                 ]),
                 html.td([], [element.text(option.unwrap(repo.description, ""))]),
                 html.td([], [element.text(option.unwrap(repo.language, ""))]),
