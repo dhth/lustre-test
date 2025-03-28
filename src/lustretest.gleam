@@ -43,7 +43,7 @@ fn get_repos(user_name: String) -> effect.Effect(Msg) {
   let decoder = {
     use id <- decode.field("id", decode.int)
     use name <- decode.field("name", decode.string)
-    use url <- decode.field("url", decode.string)
+    use url <- decode.field("html_url", decode.string)
     use description <- decode.field(
       "description",
       decode.optional(decode.string),
@@ -154,7 +154,7 @@ pub fn view(model: Model) -> element.Element(Msg) {
             ]),
             ..list.map(model.repos, fn(repo) {
               html.tr([attribute.class("text-base")], [
-                html.a([attribute.href(repo.url)], [
+                html.a([attribute.href(repo.url), attribute.target("_blank")], [
                   html.td([attribute.class("text-[#83a598] font-semibold")], [
                     element.text(repo.name),
                   ]),
