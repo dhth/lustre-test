@@ -11,6 +11,10 @@ import lustre/element/html
 import lustre/event
 import lustre_http
 
+const badges_style_qp = "style=flat-square"
+
+const badges_url = "https://img.shields.io"
+
 pub type Repo {
   Repo(
     id: Int,
@@ -22,19 +26,37 @@ pub type Repo {
   )
 }
 
+pub type ResultsType {
+  Table
+  Summary
+}
+
 pub type Model {
-  Model(user_name: String, fetching: Bool, repos: List(Repo), debug: Bool)
+  Model(
+    user_name: String,
+    fetching: Bool,
+    repos: List(Repo),
+    results_type: ResultsType,
+    debug: Bool,
+  )
 }
 
 pub type Msg {
   UserEnteredUsernameInput(String)
   UserSubmittedRequest
+  UserChangedResultType(ResultsType)
   ApiReturnedRepos(Result(List(Repo), lustre_http.HttpError))
 }
 
 fn init(_) -> #(Model, effect.Effect(Msg)) {
   #(
-    Model(user_name: "dhth", fetching: True, repos: [], debug: False),
+    Model(
+      user_name: "dhth",
+      fetching: True,
+      repos: [],
+      results_type: Summary,
+      debug: False,
+    ),
     get_repos("dhth"),
   )
 }
@@ -80,6 +102,10 @@ pub fn update(model: Model, msg: Msg) -> #(Model, effect.Effect(Msg)) {
         True -> #(model, effect.none())
         False -> #(Model(..model, fetching: True), get_repos(model.user_name))
       }
+    UserChangedResultType(results_type) -> #(
+      Model(..model, results_type:),
+      effect.none(),
+    )
     ApiReturnedRepos(Ok(repos)) -> #(
       Model(..model, fetching: False, repos:),
       effect.none(),
@@ -98,8 +124,8 @@ pub fn view(model: Model) -> element.Element(Msg) {
   }
 
   let heading_text = case model.fetching {
-    False -> "lustre test"
-    True -> "lustre test ..."
+    False -> "github user"
+    True -> "github user ..."
   }
   let heading =
     html.div([], [
@@ -109,7 +135,7 @@ pub fn view(model: Model) -> element.Element(Msg) {
           attribute.target("_blank"),
         ],
         [
-          html.h1([attribute.class("text-4xl mb-2 text-[#fe8019]")], [
+          html.h1([attribute.class("text-4xl mb-4 text-[#fe8019]")], [
             element.text(heading_text),
           ]),
         ],
@@ -117,7 +143,7 @@ pub fn view(model: Model) -> element.Element(Msg) {
     ])
 
   let search_form =
-    html.div([], [
+    html.div([attribute.class("mb-4")], [
       html.input([
         event.on_input(UserEnteredUsernameInput),
         attribute.class("px-4 py-1 mr-2 my-2 text-[#282828]"),
@@ -135,11 +161,53 @@ pub fn view(model: Model) -> element.Element(Msg) {
             string.is_empty(model.user_name) || model.fetching
           }),
         ],
-        [element.text("fetch repos")],
+        [element.text("fetch info")],
       ),
     ])
 
-  let results = case model.repos {
+  let results_type_radio =
+    html.div([attribute.class("flex flex-wrap gap-2 mb-10")], [
+      html.label([attribute.for("results-summary")], [element.text("summary")]),
+      html.input([
+        attribute.type_("radio"),
+        attribute.id("results-summary"),
+        attribute.checked(model.results_type == Summary),
+        event.on_click(UserChangedResultType(Summary)),
+      ]),
+      html.label([attribute.for("results-table")], [element.text("table")]),
+      html.input([
+        attribute.type_("radio"),
+        attribute.id("results-table"),
+        attribute.checked(model.results_type == Table),
+        event.on_click(UserChangedResultType(Table)),
+      ]),
+    ])
+
+  let results = case model.results_type {
+    Summary -> repos_summary_div(model.repos)
+    Table -> repo_tables_div(model.repos)
+  }
+
+  html.div(
+    [
+      attribute.class(
+        "container w-2/3 mx-auto bg-[#282828] text-[#ebdbb2] mt-10 text-lg",
+      ),
+    ],
+    [debug, heading, search_form, results_type_radio, results],
+  )
+}
+
+fn repos_summary_div(repos: List(Repo)) -> element.Element(Msg) {
+  case repos {
+    [] -> element.none()
+    [_, ..] ->
+      html.div([attribute.class("mt-8")], list.map(repos, get_repo_details))
+  }
+}
+
+fn repo_tables_div(repos: List(Repo)) -> element.Element(Msg) {
+  case repos {
     [] -> element.none()
     [_, ..] ->
       html.div([attribute.class("mt-8")], [
@@ -161,7 +229,7 @@ pub fn view(model: Model) -> element.Element(Msg) {
                 element.text("Stargazers"),
               ]),
             ]),
-            ..list.map(model.repos, fn(repo) {
+            ..list.map(repos, fn(repo) {
               html.tr([attribute.class("text-base border-2 border-[#3c3836]")], [
                 html.a([attribute.href(repo.url), attribute.target("_blank")], [
                   html.td(
@@ -178,20 +246,76 @@ pub fn view(model: Model) -> element.Element(Msg) {
         ),
       ])
   }
+}
 
-  html.div(
-    [
-      attribute.class(
-        "container w-2/3 mx-auto bg-[#282828] text-[#ebdbb2] mt-10 text-lg",
-      ),
-    ],
-    [debug, heading, search_form, results],
-  )
+fn languages_count_url(name: String) -> String {
+  badges_url <> "/github/languages/count/" <> name <> "?" <> badges_style_qp
+}
+
+fn top_language_url(name: String) -> String {
+  badges_url <> "/github/languages/top/" <> name <> "?" <> badges_style_qp
+}
+
+fn all_downloads_url(name: String) -> String {
+  badges_url <> "/github/downloads/" <> name <> "/total?" <> badges_style_qp
+}
+
+fn license_url(name: String) -> String {
+  badges_url <> "/github/license/" <> name <> "?=" <> badges_style_qp
+}
+
+fn stars_url(name: String) -> String {
+  badges_url <> "/github/stars/" <> name <> "?" <> badges_style_qp
+}
+
+fn issues_url(name: String) -> String {
+  badges_url <> "/github/issues/" <> name <> "?" <> badges_style_qp
+}
+
+fn pulls_url(name: String) -> String {
+  badges_url <> "/github/issues-pr/" <> name <> "?" <> badges_style_qp
+}
+
+fn files_count(name: String) -> String {
+  badges_url
+  <> "/github/directory-file-count/"
+  <> name
+  <> "?"
+  <> badges_style_qp
+}
+
+fn get_repo_details(repo: Repo) -> element.Element(Msg) {
+  let description = case repo.description {
+    option.None -> element.none()
+    option.Some(d) ->
+      html.p([attribute.class("my-2 text-[#d5c4a1] font-sm")], [element.text(d)])
+  }
+
+  let badge_urls = [
+    languages_count_url(repo.name),
+    top_language_url(repo.name),
+    all_downloads_url(repo.name),
+    license_url(repo.name),
+    stars_url(repo.name),
+    files_count(repo.name),
+    issues_url(repo.name),
+    pulls_url(repo.name),
+  ]
+
+  html.div([attribute.class("repo-details mb-12")], [
+    html.h2([attribute.class("font-xl text-[#83a598] mb-2")], [
+      element.text(repo.name),
+    ]),
+    description,
+    html.div(
+      [attribute.class("flex flex-wrap gap-2")],
+      badge_urls
+        |> list.map(fn(url) { html.img([attribute.src(url)]) }),
+    ),
+  ])
 }
 
 pub fn main() {
   let app = lustre.application(init, update, view)
   let assert Ok(_) = lustre.start(app, "#app", Nil)
-
-  Nil
 }
