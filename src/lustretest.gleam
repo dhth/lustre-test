@@ -11,7 +11,7 @@ import lustre/element/html
 import lustre/event
 import lustre_http
 
-const badges_style_qp = "style=flat-square"
+const badges_style_qp = "style=for-the-badge"
 
 const badges_url = "https://img.shields.io"
 
@@ -261,7 +261,7 @@ fn all_downloads_url(name: String) -> String {
 }
 
 fn license_url(name: String) -> String {
-  badges_url <> "/github/license/" <> name <> "?=" <> badges_style_qp
+  badges_url <> "/github/license/" <> name <> "?" <> badges_style_qp
 }
 
 fn stars_url(name: String) -> String {
@@ -276,6 +276,26 @@ fn pulls_url(name: String) -> String {
   badges_url <> "/github/issues-pr/" <> name <> "?" <> badges_style_qp
 }
 
+fn num_commits_url(name: String) -> String {
+  badges_url <> "/github/commit-activity/t/" <> name <> "?" <> badges_style_qp
+}
+
+fn last_commit_url(name: String) -> String {
+  badges_url <> "/github/last-commit/" <> name <> "?" <> badges_style_qp
+}
+
+fn release_date_url(name: String) -> String {
+  badges_url <> "/github/release-date/" <> name <> "?" <> badges_style_qp
+}
+
+fn commits_since_last_release_url(name: String) -> String {
+  badges_url
+  <> "/github/commits-since/"
+  <> name
+  <> "/latest?"
+  <> badges_style_qp
+}
+
 fn files_count(name: String) -> String {
   badges_url
   <> "/github/directory-file-count/"
@@ -288,31 +308,41 @@ fn get_repo_details(repo: Repo) -> element.Element(Msg) {
   let description = case repo.description {
     option.None -> element.none()
     option.Some(d) ->
-      html.p([attribute.class("my-2 text-[#d5c4a1] font-sm")], [element.text(d)])
+      html.p([attribute.class("mb-4 text-[#d5c4a1] font-sm")], [element.text(d)])
   }
 
   let badge_urls = [
     languages_count_url(repo.name),
     top_language_url(repo.name),
-    all_downloads_url(repo.name),
-    license_url(repo.name),
     stars_url(repo.name),
-    files_count(repo.name),
+    license_url(repo.name),
     issues_url(repo.name),
     pulls_url(repo.name),
+    num_commits_url(repo.name),
+    files_count(repo.name),
+    num_commits_url(repo.name),
+    last_commit_url(repo.name),
+    release_date_url(repo.name),
+    commits_since_last_release_url(repo.name),
+    all_downloads_url(repo.name),
   ]
 
-  html.div([attribute.class("repo-details mb-12")], [
-    html.h2([attribute.class("font-xl text-[#83a598] mb-2")], [
-      element.text(repo.name),
-    ]),
-    description,
-    html.div(
-      [attribute.class("flex flex-wrap gap-2")],
-      badge_urls
-        |> list.map(fn(url) { html.img([attribute.src(url)]) }),
-    ),
-  ])
+  html.div(
+    [attribute.class("repo-details mb-12 border-2 border-[#3c3836] py-4 px-4")],
+    [
+      html.h2([attribute.class("text-xl font-semibold text-[#83a598] mb-2")], [
+        html.a([attribute.href(repo.url), attribute.target("_blank")], [
+          element.text(repo.name),
+        ]),
+      ]),
+      description,
+      html.div(
+        [attribute.class("flex flex-wrap gap-2 mb-2")],
+        badge_urls
+          |> list.map(fn(url) { html.img([attribute.src(url)]) }),
+      ),
+    ],
+  )
 }
 
 pub fn main() {
