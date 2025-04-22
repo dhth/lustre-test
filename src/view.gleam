@@ -24,7 +24,7 @@ pub fn view(model: Model) -> element.Element(Msg) {
       ),
     ],
     [
-      html.div([attribute.class("container w-2/3 pt-10 mx-auto")], [
+      html.div([attribute.class("container w-2/3 max-sm:w-4/5 py-10 mx-auto")], [
         model |> debug_section,
         heading(model.fetching, model.theme),
         model |> search_form,
@@ -167,7 +167,7 @@ fn repo_tables_div(repos: List(Repo), theme: Theme) -> element.Element(Msg) {
   case repos {
     [] -> element.none()
     [_, ..] ->
-      html.div([attribute.class("mt-8")], [
+      html.div([attribute.class("mt-8 overflow-x-auto ")], [
         html.table(
           [
             attribute.class(
