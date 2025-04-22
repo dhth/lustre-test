@@ -14,7 +14,7 @@ const badges_url = "https://img.shields.io"
 
 const heading_text_class_light = "text-[#000000]"
 
-const heading_text_class_dark = "text-[#fe8019]"
+const heading_text_class_dark = "text-[#fabd2f]"
 
 pub fn view(model: Model) -> element.Element(Msg) {
   html.div(
