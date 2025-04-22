@@ -1,20 +1,7 @@
 import gleam/dynamic/decode
 import lustre/effect
 import lustre_http
-import types.{type Model, type Msg, Model, Repo}
-
-pub fn init(_) -> #(Model, effect.Effect(Msg)) {
-  #(
-    Model(
-      user_name: "dhth",
-      fetching: True,
-      repos: [],
-      results_type: types.Summary,
-      debug: False,
-    ),
-    get_repos("dhth"),
-  )
-}
+import types.{type Msg, Repo}
 
 pub fn get_repos(user_name: String) -> effect.Effect(Msg) {
   let decoder = {

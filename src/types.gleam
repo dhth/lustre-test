@@ -12,6 +12,25 @@ pub type Repo {
   )
 }
 
+pub type Theme {
+  Light
+  Dark
+}
+
+pub fn theme_to_string(theme: Theme) -> String {
+  case theme {
+    Dark -> "🌙"
+    Light -> "☀️"
+  }
+}
+
+pub fn get_next_theme(current: Theme) -> Theme {
+  case current {
+    Dark -> Light
+    Light -> Dark
+  }
+}
+
 pub type ResultsType {
   Table
   Summary
@@ -23,6 +42,7 @@ pub type Model {
     fetching: Bool,
     repos: List(Repo),
     results_type: ResultsType,
+    theme: Theme,
     debug: Bool,
   )
 }
@@ -32,4 +52,16 @@ pub type Msg {
   UserSubmittedRequest
   UserChangedResultType(ResultsType)
   ApiReturnedRepos(Result(List(Repo), lustre_http.HttpError))
+  ThemeChangeRequested
+}
+
+pub fn init_model() -> Model {
+  Model(
+    user_name: "dhth",
+    fetching: True,
+    repos: [],
+    results_type: Summary,
+    theme: Dark,
+    debug: False,
+  )
 }

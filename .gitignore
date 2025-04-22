@@ -3,3 +3,5 @@
 /build
 erl_crash.dump
 priv/static/*.mjs
+priv/static/repos.css
+priv/static/*.min.css

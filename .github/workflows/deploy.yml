@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+env:
+  GLEAM_VERSION: '1.10.0'
+
 jobs:
   deploy:
     name: Deploy to GitHub Pages
@@ -21,10 +24,8 @@ jobs:
         uses: erlef/setup-beam@v1
         with:
           otp-version: "27.0"
-          gleam-version: "1.9.1"
+          gleam-version: ${{ env.GLEAM_VERSION }}
           rebar3-version: "3"
-      - name: Install dependencies
-        run: gleam deps download
       - name: Build app
         run: gleam run -m lustre/dev build app --minify
       - name: Copy output to dist
@@ -33,7 +34,7 @@ jobs:
           cp index.html dist/index.html
           cp -r priv dist/priv
       - name: Update path in index.html to use minified app
-        run: sed -i 's|priv/static/lustretest.mjs|priv/static/lustretest.min.mjs|' dist/index.html
+        run: sed -i 's|priv/static/repos.mjs|priv/static/repos.min.mjs|' dist/index.html
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
